@@ -77,9 +77,13 @@ public class UnifiedDL  {
 //
 //        System.out.println(loadImg);
 
-       new UnifiedDLExperiment().executeFusingExperiments();
+      new UnifiedDLExperiment().executeFusingExperiments();
 
 //        new UnifiedDL().multiThreadTest();
+
+
+//        System.out.println(Runtime.getRuntime().availableProcessors());
+
     }
 
     private void multiThreadTest()  {

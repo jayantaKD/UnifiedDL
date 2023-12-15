@@ -39,7 +39,7 @@ public class VertexPair implements Serializable {
         this.vertex2 = vertex2;
         this.vertex1EmVector = vertex1EmVector;
         this.vertex2EmVector = vertex2EmVector;
-        this.l2NormDistance = l2Norm;
+        this.l2NormDistance = calculateL2Norm();
         //this.cosineSimilarity = cosineSimilarity(this.vertex1EmVector, this.vertex1EmVector);
 //        this.id = Hashing.sha256()
 //                .hashString(vertex1.getId().concat(vertex2.getId()), StandardCharsets.UTF_8)

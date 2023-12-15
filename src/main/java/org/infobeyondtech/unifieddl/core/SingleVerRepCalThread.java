@@ -3,7 +3,6 @@ package org.infobeyondtech.unifieddl.core;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
-import org.infobeyondtech.unifieddl.processingzone.GHDI;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -13,29 +12,28 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 
-public class VerRepCalThread implements Callable<List<Node>> {
+public class SingleVerRepCalThread implements Callable<Node> {
 
     Semaphore sem;
     String threadName;
     Dictionary<String, List<Double>> vertexVectorDictionary;
     Dictionary<String, List<Double>> edgeVectorDictionary;
-    Graph inputGraph;
-
+    Node node;
     Semaphore semaVerDict;
     Semaphore semaEdgeDict;
     Semaphore semaGraphNode;
 
 
-    public VerRepCalThread(Semaphore semaVerDict,Semaphore semaEdgeDict,Semaphore semaGraphNode,
-            Dictionary<String, List<Double>> vertexVectorDictionary,
-                           Dictionary<String, List<Double>> edgeVectorDictionary,
-                           Graph inputGraph)
+    public SingleVerRepCalThread(Semaphore semaVerDict, Semaphore semaEdgeDict, Semaphore semaGraphNode,
+                                 Dictionary<String, List<Double>> vertexVectorDictionary,
+                                 Dictionary<String, List<Double>> edgeVectorDictionary,
+                                 Node node)
     {
 //        super("");
 //        this.sem = sem;
         this.vertexVectorDictionary = vertexVectorDictionary;
         this.edgeVectorDictionary = edgeVectorDictionary;
-        this.inputGraph = inputGraph;
+        this.node = node;
         this.semaVerDict = semaVerDict;
         this.semaEdgeDict = semaEdgeDict;
         this.semaGraphNode = semaGraphNode;
@@ -43,24 +41,27 @@ public class VerRepCalThread implements Callable<List<Node>> {
 
 
     @Override
-    public List<Node> call()  {
+    public Node call()  {
 
         List<Node> result = new ArrayList<Node>();
-        for (Node v : inputGraph){
-            List<Double> vertexRep = calculateVertexRepresentation(v, vertexVectorDictionary, edgeVectorDictionary);
+//        for (Node v : inputGraph){
+            List<Double> vertexRep = calculateVertexRepresentation(node, vertexVectorDictionary, edgeVectorDictionary);
 
             if (vertexRep != null) {
                 try {
                     this.semaGraphNode.acquire();
-                    v.setAttribute("vertex.embedding", vertexRep);
+                    node.setAttribute("vertex.embedding", vertexRep);
                     this.semaGraphNode.release();
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    //throw new RuntimeException(e);
+                    return null;
                 }
-                result.add(v);
+                return node;
             }
-        }
-        return result;
+            else {
+                return null;
+            }
+//        }
     }
 
 

@@ -58,8 +58,8 @@ public class UnifiedDLExperiment {
 
 
     public void executeFusingExperiments() {
-        for(int i=20; i<=20; i++){
-            for(int j=70; j<=70; j++){
+        for(int i=1; i<=20; i++){
+            for(int j=1; j<=20; j++){
                 String repo1 = "unifiedDLSource1V" + i;
                 String repo2 = "unifiedDLSource2V" + j;
 
@@ -68,7 +68,7 @@ public class UnifiedDLExperiment {
 //                boolean isTrainSuccess = new Word2VecEmbeddingModule().trainWord2VecEmbeddingModel(new String[]{repo1+"-RdfRepo", repo2+"-RdfRepo"});
 //                System.out.println("Training vector model ("+repo1+"-RdfRepo"+","+repo2+"-RdfRepo"+") Generation Successful: "+isTrainSuccess);
 
-                  boolean isRetrieveVectorSuccess = new Word2VecEmbeddingModule().retrieveAndStoreVectors(new String[]{repo1+"-RdfRepo", repo2+"-RdfRepo"});
+//                  boolean isRetrieveVectorSuccess = new Word2VecEmbeddingModule().retrieveAndStoreVectors(new String[]{repo1+"-RdfRepo", repo2+"-RdfRepo"});
 
                   System.out.println("---------------------------------------------------------------------------------------------------------------------");
                   System.out.println("---------------------------------------------------------------------------------------------------------------------");
@@ -76,7 +76,7 @@ public class UnifiedDLExperiment {
 //                  System.out.println("Retrieve and store vector ("+repo1+"-RdfRepo"+","+repo2+"-RdfRepo"+") Generation Successful: "+isRetrieveVectorSuccess);
 
 
-//                  boolean isFuseSuccess = new GHDI().fusingAlgorithm(repo1+"-RdfRepo",repo2+"-RdfRepo", true);
+                  boolean isFuseSuccess = new GHDI().fusingAlgorithm(repo1+"-RdfRepo",repo2+"-RdfRepo", true);
 //                boolean isFuseStoreSuccess = new Rdf4jTripleStoreProcessor().fuseRdfGraphs(new String[]{repo1+"-RdfRepo",repo2+"-RdfRepo"},true);
 //                System.out.println("Embedding model vectors ("+repo1+"-RdfRepo"+","+repo2+"-RdfRepo"+") Generation Successful: "+issuccess);
 

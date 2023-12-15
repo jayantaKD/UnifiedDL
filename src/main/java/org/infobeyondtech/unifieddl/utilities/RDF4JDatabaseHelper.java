@@ -19,7 +19,8 @@ import java.util.List;
 
 public class RDF4JDatabaseHelper {
 
-    private String baseRDF4JDirectory="C:\\unifiedDLGraphDatabase\\";
+//    private String baseRDF4JDirectory="C:\\unifiedDLGraphDatabase\\";
+    private String baseRDF4JDirectory="/home/Jay/unifiedDLGraphDatabase/";
 
     public RDF4JDatabaseHelper(String baseRDF4JDirectory){
         this.baseRDF4JDirectory = baseRDF4JDirectory;

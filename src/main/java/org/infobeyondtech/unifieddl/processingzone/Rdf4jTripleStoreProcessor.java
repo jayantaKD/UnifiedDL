@@ -32,7 +32,9 @@ import java.util.stream.Collectors;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 public class Rdf4jTripleStoreProcessor {
-    private String baseRDF4JDirectory="C:\\unifiedDLGraphDatabase\\";
+    //private String baseRDF4JDirectory="C:\\unifiedDLGraphDatabase\\";
+
+    private String baseRDF4JDirectory="/home/Jay/unifiedDLGraphDatabase/";
     private String repositoryId = "";
     private String baseIRI = "http://infobeyondtech.com/unifieddl/";
 //    private String matchLiteralIRI = "http://infobeyondtech.com/unifieddl/matchLiteral";

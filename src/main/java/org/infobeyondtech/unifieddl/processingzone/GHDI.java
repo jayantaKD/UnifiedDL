@@ -25,7 +25,7 @@ import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.stream.GraphParseException;
-import org.infobeyondtech.unifieddl.core.VerPairCalThread;
+import org.infobeyondtech.unifieddl.core.SingleVerRepCalThread;
 import org.infobeyondtech.unifieddl.core.VerRepCalThread;
 import org.infobeyondtech.unifieddl.processingzone.groupsteinertree.*;
 import org.infobeyondtech.unifieddl.utilities.Word2VecEmbeddingModule;
@@ -34,6 +34,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 
@@ -375,41 +376,82 @@ public class GHDI {
             Double maxValue = Double.MIN_VALUE;
             Double minValue = Double.MAX_VALUE;
 
-            final long vertexRepCalTimeStart = System.currentTimeMillis();
+
 
             List<Node> input1 = new ArrayList<Node>();
             List<Node> input2 = new ArrayList<Node>();
 
-            ExecutorService pool = Executors.newFixedThreadPool(16);
-            VerRepCalThread t1 = new VerRepCalThread(vertexVectorDictionary, edgeVectorDictionary, inputGraph1);
-            VerRepCalThread t2 = new VerRepCalThread(vertexVectorDictionary, edgeVectorDictionary, inputGraph2);
+
+            Semaphore semaVerDict = new Semaphore(1);
+            Semaphore semaEdgeDict = new Semaphore(1);
+            Semaphore semaGraphNode = new Semaphore(1);
+//            ExecutorService pool = Executors.newFixedThreadPool(1000);
+
+            ExecutorService pool = Executors.newCachedThreadPool();
+
+            final long vertexRepCalTimeStart = System.currentTimeMillis();
+// ------------------- parallel with each graph vertex rep calculation ---------
+            /*VerRepCalThread t1 = new VerRepCalThread(semaVerDict,semaEdgeDict,semaGraphNode,vertexVectorDictionary, edgeVectorDictionary, inputGraph1);
+            VerRepCalThread t2 = new VerRepCalThread(semaVerDict,semaEdgeDict,semaGraphNode,vertexVectorDictionary, edgeVectorDictionary, inputGraph2);
             pool.submit(t1);
             pool.submit(t2);
             input1 = t1.call();
-            input2 = t2.call();
+            input2 = t2.call();*/
 
 
-            List<VerPairCalThread> pthreads = new ArrayList<VerPairCalThread>();
-
-            for (Node v1 : input1) {
-//                List<Double> v1VertexRep = (List<Double>) v1.getAttribute("vertex.embedding");
-                    for (Node v2 : input2) {
-//                       List<Double> v2VertexRep = (List<Double>) v2.getAttribute("vertex.embedding");
-                            pairIndex = pairIndex + 1;
-                            VerPairCalThread t = new VerPairCalThread(sema,v1,v2);
-                            pthreads.add(t);
-//                            pool.submit(t);
-//                            VertexPair pair = new VertexPair(v1, v2, v1VertexRep, v2VertexRep,0);
-//                            vertexPairs.add(pair);
-                    }
+// ------------------- parallel with each node vertex rep calculation ---------
+            List<SingleVerRepCalThread> tList1 = new ArrayList<SingleVerRepCalThread>();
+            List<SingleVerRepCalThread> tList2 = new ArrayList<SingleVerRepCalThread>();
+            for (Node v : inputGraph1) {
+                SingleVerRepCalThread t = new SingleVerRepCalThread(semaVerDict,semaEdgeDict,semaGraphNode,vertexVectorDictionary, edgeVectorDictionary, v);
+//                Future<Node> tf = pool.submit(t);
+                tList1.add(t);
+            }
+            for (Node v : inputGraph2) {
+                SingleVerRepCalThread t = new SingleVerRepCalThread(semaVerDict,semaEdgeDict,semaGraphNode,vertexVectorDictionary, edgeVectorDictionary, v);
+//                pool.submit(t);
+                tList2.add(t);
             }
 
-            pthreads.stream().forEach(x-> pool.submit(x));
+            List<Future<Node>> nodes1Futures = pool.invokeAll(tList1);
+            List<Future<Node>> nodes2Futures = pool.invokeAll(tList2);
+            for(Future<Node> nodes1Future:nodes1Futures){
+                Node n = nodes1Future.get();
+                if(n!=null){
+                    input1.add(n);
+                }
+            }
+            for(Future<Node> nodes2Future:nodes2Futures){
+                Node n = nodes2Future.get();
+                if(n!=null){
+                    input2.add(n);
+                }
+            }
+
+            pool.shutdown();
+
+            final long vertexRepCalTimeEnd = System.currentTimeMillis();
 
 
+
+
+//            List<VerPairCalThread> pthreads = new ArrayList<VerPairCalThread>();
+//
+//            for (Node v1 : input1) {
+////                List<Double> v1VertexRep = (List<Double>) v1.getAttribute("vertex.embedding");
+//                    for (Node v2 : input2) {
+////                       List<Double> v2VertexRep = (List<Double>) v2.getAttribute("vertex.embedding");
+//                            pairIndex = pairIndex + 1;
+//                            VerPairCalThread t = new VerPairCalThread(sema,v1,v2);
+//                            pthreads.add(t);
+////                            pool.submit(t);
+////                            VertexPair pair = new VertexPair(v1, v2, v1VertexRep, v2VertexRep,0);
+////                            vertexPairs.add(pair);
+//                    }
+//            }
+//            pthreads.stream().forEach(x-> pool.submit(x));
 
 //            pool.shutdown();
-
 //            for (Node v : inputGraph1){
 //                List<Double> vertexRep = calculateVertexRepresentation(v, vertexVectorDictionary, edgeVectorDictionary);
 //                if (vertexRep != null) {
@@ -426,29 +468,39 @@ public class GHDI {
 //                }
 //            }
 
+
 //            for (Node v1 : input1) {
 //                List<Double> v1VertexRep = (List<Double>) v1.getAttribute("vertex.embedding");
 //                    for (Node v2 : input2) {
 //                       List<Double> v2VertexRep = (List<Double>) v2.getAttribute("vertex.embedding");
 //                            pairIndex = pairIndex + 1;
-//                            VertexPair pair = new VertexPair(v1, v2, v1VertexRep, v2VertexRep,0);
-//                            vertexPairs.add(pair);
+//
+//                            try {
+//                                VertexPair pair = new VertexPair(v1, v2, v1VertexRep, v2VertexRep, 0);
+//                                vertexPairs.add(pair);
+//                            } catch(Exception Ex){
+//                                System.out.println(v1);
+//                                System.out.println(v1VertexRep);
+//                                System.out.println(v2);
+//                                System.out.println(v2VertexRep);
+//                                System.out.println(Ex);
+//                            }
 //                    }
 //            }
 
             //            int index = 0;
-            for (VerPairCalThread pthread : pthreads) {
-                VertexPair pair = pthread.call();
+            for (VertexPair pair: vertexPairs) {
+//                VertexPair pair = pthread.call();
                 Double distance = pair.getL2NormDistance();
                 if (distance > maxValue)
                     maxValue = distance;
                 if (distance < minValue)
                     minValue = distance;
 
-                vertexPairs.add(pair);
+               // vertexPairs.add(pair);
             }
 
-            pool.shutdown();
+
 
             for (VertexPair pair : vertexPairs) {
                 Double distance = pair.getL2NormDistance();
@@ -456,7 +508,7 @@ public class GHDI {
                 pair.setL2NormDistancePercentage(distancePercentage);
             }
 
-            final long vertexRepCalTimeEnd = System.currentTimeMillis();
+
             System.out.println(inputGraph1.nodes().count()*inputGraph2.nodes().count());
             System.out.println(input1.size()+"--"+input2.size()+"-->"+input1.size()*input2.size());
 //            System.out.println(input11.size()+"--"+input22.size()+"-->"+input11.size()*input22.size());
